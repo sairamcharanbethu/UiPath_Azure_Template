@@ -1,0 +1,8 @@
+# filename: uipath-deploy-template.yml
+parameters:
+  environmentName: ''
+
+steps:
+- script: |
+    echo Deploy to ${{ parameters.environmentName }}
+    # Add deployment steps here
