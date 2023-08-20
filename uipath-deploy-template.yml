@@ -1,15 +1,33 @@
-# uipath-template.yml
 parameters:
   workingDir: ''
 
 steps:
 - checkout: self
 
+# Cache UiPathCLI step
+- task: Cache@2
+  inputs:
+    key: 'uipathcli | "$(Agent.OS)"'
+    path: $(Pipeline.Workspace)/uipathcli
+    cacheHitVar: UIPATHCLI_CACHED
+  displayName: 'Cache UiPathCLI'
+
+# Download the UiPathCLI if not cached
 - powershell: |
     New-Item -Path "${{ parameters.workingDir }}" -ItemType "directory" -Name "scripts";
-    Invoke-WebRequest "https://github.com/UiPath-Services/UiPath-DevOps-Scripts/raw/main/scripts/UiPathPack.ps1" -OutFile "${{ parameters.workingDir }}scripts\UiPathPack.ps1";
+    Invoke-WebRequest "https://raw.githubusercontent.com/sairamcharanbethu/UiPath_Azure_Template/main/scripts/DownloadUiPathCLI.ps1" -OutFile "${{ parameters.workingDir }}scripts\DownloadUiPathCLI.ps1";
+    if (-not $env:UIPATHCLI_CACHED) {
+        . "${{ parameters.workingDir }}scripts\DownloadUiPathCLI.ps1"
+    }
+  displayName: 'Download UiPathCLI if not cached'
+  condition: ne(variables.UIPATHCLI_CACHED, 'true') # Only run if not cached
+
+# Download UiPathPack.ps1
+- powershell: |
+    Invoke-WebRequest "https://raw.githubusercontent.com/sairamcharanbethu/UiPath_Azure_Template/main/scripts/UiPathPack.ps1" -OutFile "${{ parameters.workingDir }}scripts\UiPathPack.ps1";
   displayName: 'Download PS Scripts'
 
+# Run UiPath Pack
 - powershell: |
     New-Item -Path "${{ parameters.workingDir }}" -ItemType "directory" -Name "output";
     . "${{ parameters.workingDir }}scripts\UiPathPack.ps1" "${{ parameters.workingDir }}project.json" "${{ parameters.workingDir }}output\\" -autoVersion
