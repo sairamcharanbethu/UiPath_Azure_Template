@@ -151,7 +151,7 @@ if($uipathCliFilePath -ne ""){
 
     $uipathCLI = "$scriptPath\uipathcli\$cliVersion\tools\uipcli.exe"
     if (-not(Test-Path -Path $uipathCLI -PathType Leaf)) {
-        WriteLog "UiPath CLI does not exist in this folder. Attempting to download it..."
+        WriteLog "UiPath CLI does not exist in this folder. Location: $uipathCLI. Attempting to download it..."
         try {
             if (-not(Test-Path -Path "$scriptPath\uipathcli\$cliVersion" -PathType Leaf)){
                 New-Item -Path "$scriptPath\uipathcli\$cliVersion" -ItemType "directory" -Force | Out-Null
