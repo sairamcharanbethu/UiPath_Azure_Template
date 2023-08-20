@@ -1,8 +1,13 @@
 # filename: uipath-deploy-template.yml
+
 parameters:
   environmentName: ''
 
+pool:  
+  name: 'Desktop'
+
 steps:
+- checkout: self
 - script: |
     echo Deploy to ${{ parameters.environmentName }}
     # Add deployment steps here
