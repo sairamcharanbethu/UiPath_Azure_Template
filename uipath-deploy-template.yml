@@ -1,9 +1,7 @@
-# filename: uipath-deploy-template.yml
-
 parameters:
-  environmentName: ''
-  
+  - name: projectName
+    type: string
+
 steps:
-- checkout: self
 - script: |
-    echo Deploy to ${{ parameters.environmentName }}
+    echo Deploying project ${{ parameters.projectName }}
