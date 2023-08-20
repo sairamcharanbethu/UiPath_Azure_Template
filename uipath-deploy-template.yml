@@ -2,10 +2,7 @@
 
 parameters:
   environmentName: ''
-
-pool:  
-  name: 'Desktop'
-
+  
 steps:
 - checkout: self
 - script: |
