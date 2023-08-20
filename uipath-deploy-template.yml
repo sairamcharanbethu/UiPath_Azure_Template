@@ -7,7 +7,7 @@ steps:
 
 - powershell: |
     New-Item -Path "${{ parameters.workingDir }}" -ItemType "directory" -Name "scripts";
-    Invoke-WebRequest "https://raw.githubusercontent.com/sairamcharanbethu/UiPath_Azure_Template/main/UiPathPack.ps1?token=GHSAT0AAAAAACGQ2E2WVL7X7MTHAQAVOZ3GZHCLYMA" -OutFile "${{ parameters.workingDir }}scripts\UiPathPack.ps1";
+    Invoke-WebRequest "https://github.com/UiPath-Services/UiPath-DevOps-Scripts/raw/main/scripts/UiPathPack.ps1" -OutFile "${{ parameters.workingDir }}scripts\UiPathPack.ps1";
   displayName: 'Download PS Scripts'
 
 - powershell: |
