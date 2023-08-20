@@ -1,7 +1,14 @@
+# uipath-template.yml
 parameters:
-  - name: projectName
-    type: string
+  workingDir: ''
 
 steps:
-- script: |
-    echo Deploying project ${{ parameters.projectName }}
+- checkout: self
+
+- powershell: |
+    New-Item -Path "C:\\" -ItemType "directory" -Name "scripts";
+    Invoke-WebRequest "https://github.com/UiPath-Services/UiPath-DevOps-Scripts/raw/main/scripts/UiPathPack.ps1" -OutFile "C:\\scripts\\UiPathPack.ps1";
+    #... rest of your script
+    New-Item -Path "${{ parameters.workingDir }}" -ItemType "directory" -Name "output";
+    . 'C:\scripts\UiPathPack.ps1' "${{ parameters.workingDir }}project.json" "${{ parameters.workingDir }}output\\" -autoVersion
+  displayName: 'UiPath Pack'
