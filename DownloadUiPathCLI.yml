@@ -30,3 +30,13 @@ steps:
     Write-Output "##vso[task.setvariable variable=uipathCLI;]$(uipathCLI)"
   displayName: 'Check, Download, and Extract UiPath CLI'
   condition: ne(variables.CACHE_RESTORED, 'true')
+
+- script: |
+    echo "Packaging project located at $(ProjectPath)"
+    $(uipathCLI) pack project -p $(ProjectPath) -o $(OutPath) -v $(Version)
+    echo "Packing completed. Package is located at $(OutPath)"
+  displayName: 'Package UiPath Project'
+  env:
+    ProjectPath: 'path_to_your_uipath_project'
+    OutPath: 'path_for_output'
+    Version: 'desired_version'
