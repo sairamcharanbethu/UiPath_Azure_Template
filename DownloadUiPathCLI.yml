@@ -1,0 +1,29 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  cliVersion: '22.10.8438.32859'
+  cacheFolder: '$(System.DefaultWorkingDirectory)\uipathcli'
+  uipathCLI: '$(cacheFolder)\$(cliVersion)\tools\uipcli.exe'
+  downloadUrl: 'https://uipath.pkgs.visualstudio.com/Public.Feeds/_apis/packaging/feeds/1c781268-d43d-45ab-9dfc-0151a1c740b7/nuget/packages/UiPath.CLI.Windows/versions/$(cliVersion)/content'
+
+steps:
+- task: Cache@2
+  inputs:
+    key: 'uipathcli | "$(cliVersion)"'
+    path: '$(cacheFolder)'
+    cacheHitVar: CACHE_RESTORED
+  displayName: 'Cache UiPath CLI'
+
+- powershell: |
+    if (-not (Test-Path -Path $(uipathCLI) -PathType Leaf)) {
+      New-Item -Path "$(cacheFolder)\$(cliVersion)" -ItemType "directory" -Force | Out-Null
+      Invoke-WebRequest $(downloadUrl) -OutFile "$(cacheFolder)\$(cliVersion)\cli.zip"
+      Expand-Archive -LiteralPath "$(cacheFolder)\$(cliVersion)\cli.zip" -DestinationPath "$(cacheFolder)\$(cliVersion)"
+    }
+    Write-Output "##vso[task.setvariable variable=uipathCLI;]$(uipathCLI)"
+  displayName: 'Check and Download UiPath CLI'
+  condition: ne(variables.CACHE_RESTORED, 'true')
