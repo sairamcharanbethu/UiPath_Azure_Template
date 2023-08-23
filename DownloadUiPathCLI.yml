@@ -11,32 +11,62 @@ variables:
   downloadUrl: 'https://uipath.pkgs.visualstudio.com/Public.Feeds/_apis/packaging/feeds/1c781268-d43d-45ab-9dfc-0151a1c740b7/nuget/packages/UiPath.CLI.Windows/versions/$(cliVersion)/content'
   zipLocation: '$(cacheFolder)\$(cliVersion)\cli.zip'
 
-steps:
-- task: Cache@2
-  inputs:
-    key: 'uipathcli | "$(cliVersion)"'
-    path: '$(cacheFolder)'
-    cacheHitVar: CACHE_RESTORED
-  displayName: 'Cache UiPath CLI'
+stages:
+- stage: CacheAndSetup
+  jobs:
+  - job: CacheAndSetupJob
+    steps:
+    - task: Cache@2
+      inputs:
+        key: 'uipathcli | "$(cliVersion)"'
+        path: '$(cacheFolder)'
+        cacheHitVar: CACHE_RESTORED
+      displayName: 'Cache UiPath CLI'
 
-- powershell: |
-    if (-not (Test-Path -Path $(uipathCLI) -PathType Leaf)) {
-      New-Item -Path "$(cacheFolder)\$(cliVersion)" -ItemType "directory" -Force | Out-Null
-      Invoke-WebRequest $(downloadUrl) -OutFile "$(zipLocation)"
-      Expand-Archive -LiteralPath "$(zipLocation)" -DestinationPath "$(cacheFolder)\$(cliVersion)"
-      # Remove the downloaded zip file
-      Remove-Item -Path "$(zipLocation)"
-    }
-    Write-Output "##vso[task.setvariable variable=uipathCLI;]$(uipathCLI)"
-  displayName: 'Check, Download, and Extract UiPath CLI'
-  condition: ne(variables.CACHE_RESTORED, 'true')
+    - powershell: |
+        if (-not (Test-Path -Path $(uipathCLI) -PathType Leaf)) {
+          New-Item -Path "$(cacheFolder)\$(cliVersion)" -ItemType "directory" -Force | Out-Null
+          Invoke-WebRequest $(downloadUrl) -OutFile "$(zipLocation)"
+          Expand-Archive -LiteralPath "$(zipLocation)" -DestinationPath "$(cacheFolder)\$(cliVersion)"
+          # Remove the downloaded zip file
+          Remove-Item -Path "$(zipLocation)"
+        }
+        Write-Output "##vso[task.setvariable variable=uipathCLI;]$(uipathCLI)"
+      displayName: 'Check, Download, and Extract UiPath CLI'
+      condition: ne(variables.CACHE_RESTORED, 'true')
 
-- script: |
-    echo "Packaging project located at $(ProjectPath)"
-    $(uipathCLI) pack project -p $(ProjectPath) -o $(OutPath) -v $(Version)
-    echo "Packing completed. Package is located at $(OutPath)"
-  displayName: 'Package UiPath Project'
-  env:
-    ProjectPath: 'path_to_your_uipath_project'
-    OutPath: 'path_for_output'
-    Version: 'desired_version'
+- stage: PackageProject
+  dependsOn: CacheAndSetup
+  jobs:
+  - job: PackageProjectJob
+    steps:
+    - script: |
+        echo "Packaging project located at $(ProjectPath)"
+        $(uipathCLI) pack project -p $(ProjectPath) -o $(OutPath) -v $(Version)
+        echo "Packing completed. Package is located at $(OutPath)"
+      displayName: 'Package UiPath Project'
+      env:
+        ProjectPath: 'path_to_your_uipath_project'
+        OutPath: 'path_for_output'
+        Version: 'desired_version'
+
+- stage: ApproveAndDeploy
+  dependsOn: PackageProject
+  jobs:
+  - job: ApprovalJob
+    steps:
+    - script: echo "Waiting for manual approval..."
+    - task: ManualValidation@0
+      inputs:
+        notifyUsers: |
+          user1@example.com
+          user2@example.com
+        instructions: 'Please review and approve the deployment.'
+
+    - script: echo "Deployment approved. Deploying..."
+      displayName: 'Deploy Approval'
+      
+    - script: |
+        # Add deployment steps here
+        echo "Deploying the UiPath project..."
+      displayName: 'Deploy UiPath Project'
